@@ -1,5 +1,4 @@
-use iter::Iter;
-use serde_json::Value;
+use iter::{Iter, Found};
 use structs::{Criterion, StackItem};
 
 mod comparison;
@@ -80,7 +79,7 @@ pub fn process_filter<'a>(stack: &mut StackItem, path: &[Criterion], root: &Stac
             let mut full_criterion = vec![Criterion::Root];
             full_criterion.extend_from_slice(&sub_path);
 
-            let found: Vec<&Value> = Iter::new(stack.item.value, &full_criterion).collect();
+            let found: Vec<Found> = Iter::new(stack.item.value, &full_criterion).collect();
 
             match condition.len() {
                 0 => !found.is_empty(),
@@ -107,7 +106,12 @@ pub fn process_filter<'a>(stack: &mut StackItem, path: &[Criterion], root: &Stac
                 None => (path.to_owned(), vec![]),
             };
 
-            let found: Vec<&Value> = Iter::new(root.item.value, &sub_path).collect();
+// <<<<<<< HEAD
+//             let found: Vec<&Value> = Iter::new(root.item.value, &sub_path).collect();
+// =======
+            let doc = root.item.value;
+            let found: Vec<Found> = Iter::new(doc, &sub_path).collect();
+// >>>>>>> cee13db... Implement Found structure with found path inside
 
             match condition.len() {
                 0 => !found.is_empty(),

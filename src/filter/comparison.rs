@@ -3,10 +3,12 @@ use serde_json::Value;
 use std::f64::EPSILON;
 use structs::{Criterion, StackItem};
 
+use super::Found;
+
 pub fn filter<'a>(
     pattern: &Criterion,
     value: &Criterion,
-    values: &[&Value],
+    values: &[Found],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     match *pattern {
@@ -26,7 +28,7 @@ macro_rules! compare {
         match *$criterion {
             Criterion::Literal(ref content) => {
                 for v in $values.iter() {
-                    if let Value::String(ref string_content) = **v {
+                    if let Value::String(ref string_content) = *v.value {
                         if string_content $operator content {
                             return Some(false);
                         }
@@ -39,7 +41,7 @@ macro_rules! compare {
 
             Criterion::Float(ref content) => {
                 for v in $values.iter() {
-                    if let Value::Number(ref number_content) = **v {
+                    if let Value::Number(ref number_content) = *v.value {
                         if number_content.as_f64() $operator Some(*content) {
                             return Some(false);
                         }
@@ -58,6 +60,7 @@ macro_rules! compare {
                 Some(false)
             }
             Criterion::SubExpression(ref expression) => {
+                // unimplemented!()
                 validate_sub_expresion!($values, $root,
                     $operator, $number_operator, $eplison, $absolute, expression)
             }
@@ -69,11 +72,11 @@ macro_rules! compare {
 macro_rules! validate_sub_expresion {
     ($values:expr, $root:expr, $operator:tt, $number_operator:tt,
      $eplison:expr, $absolute:expr, $expression:expr) => ({
-        let found: Vec<&Value> = Iter::new($root.item.value, &$expression).collect();
+        let found: Vec<Found> = Iter::new($root.item.value, &$expression).collect();
 
         for item in &found {
             for value in $values.iter() {
-                match (*value, *item) {
+                match (value.value, item.value) {
                     (&Value::Number(ref value_content), &Value::Number(ref item_content)) => {
                         match (value_content.as_f64(), item_content.as_f64()) {
                             (Some(value_number), Some(item_number)) => {
@@ -119,37 +122,37 @@ macro_rules! validate_sub_expresion {
     })
 }
 
-fn is_equal<'a>(criterion: &Criterion, values: &[&Value], root: &StackItem<'a>) -> Option<bool> {
+fn is_equal<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, !=, >, EPSILON, true, is_equal)
 }
 
 fn is_different<'a>(
     criterion: &Criterion,
-    values: &[&Value],
+    values: &[Found],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(criterion, values, root, ==, <, EPSILON, true, is_different)
 }
 
-fn is_lower<'a>(criterion: &Criterion, values: &[&Value], root: &StackItem<'a>) -> Option<bool> {
+fn is_lower<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, >=, >=, -EPSILON, false, is_lower)
 }
 
 fn is_lower_or_equal<'a>(
     value: &Criterion,
-    values: &[&Value],
+    values: &[Found],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(value, values, root, >, >, EPSILON, false, is_lower_or_equal)
 }
 
-fn is_greater<'a>(criterion: &Criterion, values: &[&Value], root: &StackItem<'a>) -> Option<bool> {
+fn is_greater<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, <=, <, EPSILON, false, is_greater)
 }
 
 fn is_greater_or_equal<'a>(
     criterion: &Criterion,
-    values: &[&Value],
+    values: &[Found],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(criterion, values, root, <, <, -EPSILON, false, is_greater_or_equal)

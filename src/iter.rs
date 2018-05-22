@@ -9,8 +9,13 @@ pub struct Iter<'a, 'b> {
     stack: Vec<StackItem<'a>>,
 }
 
+pub struct Found<'a> {
+    pub value: &'a Value,
+    pub path: Vec<Step<'a>>,
+}
+
 impl<'a, 'b> Iterator for Iter<'a, 'b> {
-    type Item = &'a Value;
+    type Item = Found<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(mut current) = self.current.take() {
@@ -23,8 +28,11 @@ impl<'a, 'b> Iterator for Iter<'a, 'b> {
                         if self.ci > 0 {
                             self.ci -= 1;
                         }
+                        let path = self.stack.iter()
+                            .map(|item| item.step.clone())
+                            .collect::<Vec<_>>();
                         self.current = self.stack.pop();
-                        return Some(val);
+                        return Some(Found {value: val, path: path});
                     } else {
                         self.current = current.next();
                         self.ci += 1;
@@ -100,7 +108,9 @@ mod tests {
             Criterion::NamedChild("name".to_owned()),
         ];
 
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec!["Rex"]);
     }
 
@@ -133,7 +143,9 @@ mod tests {
             Criterion::NamedChild("user".to_owned()),
             Criterion::NamedChild("age".to_owned()),
         ];
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec![27]);
 
         // $.pets.*.type
@@ -143,7 +155,9 @@ mod tests {
             Criterion::AnyChild,
             Criterion::NamedChild("type".to_owned()),
         ];
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec!["cat", "dog"]);
 
         // $.pets.*.name
@@ -153,7 +167,9 @@ mod tests {
             Criterion::AnyChild,
             Criterion::NamedChild("name".to_owned()),
         ];
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec!["Tom", "Rex"]);
 
         // $.user.*
@@ -162,7 +178,9 @@ mod tests {
             Criterion::NamedChild("user".to_owned()),
             Criterion::AnyChild,
         ];
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec![&Value::from(27), &Value::from("Sergey")]);
     }
 
@@ -188,7 +206,9 @@ mod tests {
             Criterion::AnyChild,
         ];
 
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec!["Rex", "dog"]);
     }
 
@@ -201,7 +221,9 @@ mod tests {
         let root: Value = serde_json::from_str(&json).unwrap();
         let criteria = vec![Criterion::Root, Criterion::IndexedChild(1)];
 
-        let found: Vec<&Value> = Iter::new(&root, &criteria).collect();
+        let found: Vec<&Value> = Iter::new(&root, &criteria)
+            .map(|v| v.value)
+            .collect();
         assert_eq!(found, vec!["Bar"]);
     }
 }

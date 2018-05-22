@@ -71,3 +71,5 @@ mod selector;
 mod structs;
 
 pub use selector::Selector;
+pub use structs::Step;
+pub use iter::Found;
