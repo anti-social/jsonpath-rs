@@ -28,9 +28,10 @@ impl<'a, 'b> Iterator for Iter<'a, 'b> {
                         if self.ci > 0 {
                             self.ci -= 1;
                         }
-                        let path = self.stack.iter()
+                        let mut path = self.stack.iter()
                             .map(|item| item.step.clone())
                             .collect::<Vec<_>>();
+                        path.push(current.step);
                         self.current = self.stack.pop();
                         return Some(Found {value: val, path: path});
                     } else {
