@@ -3,12 +3,12 @@ use serde_json::Value;
 use std::f64::EPSILON;
 use structs::{Criterion, StackItem};
 
-use super::Found;
+use super::Match;
 
 pub fn filter<'a>(
     pattern: &Criterion,
     value: &Criterion,
-    values: &[Found],
+    values: &[Match],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     match *pattern {
@@ -72,9 +72,9 @@ macro_rules! compare {
 macro_rules! validate_sub_expresion {
     ($values:expr, $root:expr, $operator:tt, $number_operator:tt,
      $eplison:expr, $absolute:expr, $expression:expr) => ({
-        let found: Vec<Found> = Iter::new($root.item.value, &$expression).collect();
+        let matches: Vec<Match> = Iter::new($root.item.value, &$expression).collect();
 
-        for item in &found {
+        for item in &matches {
             for value in $values.iter() {
                 match (value.value, item.value) {
                     (&Value::Number(ref value_content), &Value::Number(ref item_content)) => {
@@ -122,37 +122,37 @@ macro_rules! validate_sub_expresion {
     })
 }
 
-fn is_equal<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
+fn is_equal<'a>(criterion: &Criterion, values: &[Match], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, !=, >, EPSILON, true, is_equal)
 }
 
 fn is_different<'a>(
     criterion: &Criterion,
-    values: &[Found],
+    values: &[Match],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(criterion, values, root, ==, <, EPSILON, true, is_different)
 }
 
-fn is_lower<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
+fn is_lower<'a>(criterion: &Criterion, values: &[Match], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, >=, >=, -EPSILON, false, is_lower)
 }
 
 fn is_lower_or_equal<'a>(
     value: &Criterion,
-    values: &[Found],
+    values: &[Match],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(value, values, root, >, >, EPSILON, false, is_lower_or_equal)
 }
 
-fn is_greater<'a>(criterion: &Criterion, values: &[Found], root: &StackItem<'a>) -> Option<bool> {
+fn is_greater<'a>(criterion: &Criterion, values: &[Match], root: &StackItem<'a>) -> Option<bool> {
     compare!(criterion, values, root, <=, <, EPSILON, false, is_greater)
 }
 
 fn is_greater_or_equal<'a>(
     criterion: &Criterion,
-    values: &[Found],
+    values: &[Match],
     root: &StackItem<'a>,
 ) -> Option<bool> {
     compare!(criterion, values, root, <, <, -EPSILON, false, is_greater_or_equal)

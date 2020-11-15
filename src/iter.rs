@@ -9,13 +9,13 @@ pub struct Iter<'a, 'b> {
     stack: Vec<StackItem<'a>>,
 }
 
-pub struct Found<'a> {
+pub struct Match<'a> {
     pub value: &'a Value,
     pub path: Vec<Step<'a>>,
 }
 
 impl<'a, 'b> Iterator for Iter<'a, 'b> {
-    type Item = Found<'a>;
+    type Item = Match<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(mut current) = self.current.take() {
@@ -33,7 +33,7 @@ impl<'a, 'b> Iterator for Iter<'a, 'b> {
                             .collect::<Vec<_>>();
                         path.push(current.step);
                         self.current = self.stack.pop();
-                        return Some(Found {value: val, path: path});
+                        return Some(Match {value: val, path: path});
                     } else {
                         self.current = current.next();
                         self.ci += 1;

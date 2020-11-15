@@ -45,7 +45,7 @@
 //!
 //!     // Apply the selector to the JSON and convert Vec<&Value> into Vec<&str>
 //!     let titles: Vec<&str> = selector.find(&json)
-//!         .map(|t| t.as_str().unwrap())
+//!         .map(|t| t.value.as_str().unwrap())
 //!         .collect();
 //!     assert_eq!(titles, vec!["Der schwarze Obelist", "Le mur"]);
 //! }
@@ -72,4 +72,4 @@ mod structs;
 
 pub use selector::Selector;
 pub use structs::Step;
-pub use iter::Found;
+pub use iter::Match;

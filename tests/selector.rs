@@ -1,7 +1,7 @@
 extern crate jsonpath;
 extern crate serde_json;
 
-use jsonpath::Selector;
+use jsonpath::{Match, Selector};
 use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
@@ -32,7 +32,7 @@ macro_rules! assert_jsonpath {
             .find(&value)
             .map(|x| {
                 // println!("{:?}", x);
-                x.$convert()
+                x.value.$convert()
             }).filter(|x| x.is_some())
             .map(|x| x.unwrap())
             .collect();
@@ -294,5 +294,5 @@ fn test_root() {
   "#;
     let value: Value = serde_json::from_str(json).unwrap();
     let selector = Selector::new("$").unwrap();
-    let _found_values: Vec<&Value> = selector.find(&value).collect();
+    let _matches: Vec<Match> = selector.find(&value).collect();
 }
