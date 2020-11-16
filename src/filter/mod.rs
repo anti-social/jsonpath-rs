@@ -3,7 +3,7 @@ use structs::{Criterion, StackItem};
 
 mod comparison;
 
-pub fn process_filter<'a>(stack: &mut StackItem, path: &[Criterion], root: &StackItem<'a>) -> bool {
+pub fn process_filter<'a>(stack: &StackItem, path: &[Criterion], root: &StackItem<'a>) -> bool {
     let mut or_indexes = vec![];
     let mut and_indexes = vec![];
 

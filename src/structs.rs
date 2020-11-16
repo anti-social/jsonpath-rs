@@ -78,8 +78,8 @@ pub enum Step<'a> {
 }
 
 // TODO: write unit tests
-pub fn matches<'a>(stack: &mut StackItem, criterion: &Criterion, root: &StackItem<'a>) -> bool {
-    let step = stack.step.clone();
+pub fn matches<'a>(stack: &StackItem, criterion: &Criterion, root: &StackItem<'a>) -> bool {
+    let step = &stack.step;
     match *criterion {
         Criterion::Root => match step {
             Step::Root => true,
@@ -103,8 +103,7 @@ pub fn matches<'a>(stack: &mut StackItem, criterion: &Criterion, root: &StackIte
             _ => false,
         },
         Criterion::Filter(ref path) => {
-            let mut filter_stack = stack.clone();
-            filter::process_filter(&mut filter_stack, path, root)
+            filter::process_filter(stack, path, root)
         }
         Criterion::AnyChild => match step {
             Step::Key(_) => true,
@@ -112,19 +111,19 @@ pub fn matches<'a>(stack: &mut StackItem, criterion: &Criterion, root: &StackIte
             _ => false,
         },
         Criterion::IndexedChild(index) => match step {
-            Step::Index(idx) => index == idx,
+            Step::Index(idx) => index == *idx,
             _ => false,
         },
         Criterion::Slice(ref range) => match step {
-            Step::Index(idx) => range.start <= idx && idx <= range.end,
+            Step::Index(idx) => range.start <= *idx && *idx <= range.end,
             _ => false,
         },
         Criterion::SliceTo(ref range_to) => match step {
-            Step::Index(idx) => idx < range_to.end,
+            Step::Index(idx) => *idx < range_to.end,
             _ => false,
         },
         Criterion::SliceFrom(from) => match step {
-            Step::Index(idx) => from <= idx,
+            Step::Index(idx) => from <= *idx,
             _ => false,
         },
     }
@@ -175,13 +174,6 @@ impl<'a> Item<'a> {
     }
 }
 
-impl<'a> Clone for Item<'a> {
-    fn clone(&self) -> Item<'a> {
-        Item::new(self.value)
-    }
-}
-
-#[derive(Clone)]
 pub struct StackItem<'a> {
     pub item: Item<'a>,
     pub step: Step<'a>,
