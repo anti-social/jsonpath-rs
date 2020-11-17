@@ -5,6 +5,7 @@ use iter::Iter;
 use parser::parse;
 use structs::Criterion;
 
+#[derive(Clone)]
 pub struct Selector {
     criteria: Vec<Criterion>,
 }
